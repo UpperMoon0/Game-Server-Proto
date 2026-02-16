@@ -23,6 +23,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -46,15 +47,14 @@ jobs:
           protoc --go_out=gen --go_opt=paths=source_relative \
                  --go-grpc_out=gen --go-grpc_opt=paths=source_relative \
                  -I. proto/controller.proto
-          
-          # Fix import path in generated files
-          sed -i 's|import "proto/common.proto"|import "github.com/nstut/game-server-proto/proto/common.proto"|g' gen/controller.pb.go || true
-          sed -i 's|import "proto/common.proto"|import "github.com/nstut/game-server-proto/proto/common.proto"|g|g' gen/controller_grpc.pb.go || true
-
-      - name: Generate common.proto Go code
-        run: |
           protoc --go_out=gen --go_opt=paths=source_relative \
                  -I. proto/common.proto
+          
+          # Move files from gen/proto to gen if they exist there
+          if [ -d "gen/proto" ]; then
+            mv gen/proto/*.pb.go gen/ 2>/dev/null || true
+            rmdir gen/proto 2>/dev/null || true
+          fi
 
       - name: Verify generated files
         run: |
@@ -62,58 +62,33 @@ jobs:
           head -20 gen/controller.pb.go
 
       - name: Commit and push generated code
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add gen/
           git diff --quiet && git diff --staged --quiet || git commit -m "chore: regenerate proto Go code [skip ci]"
-          git push
+          
+          # Pull with rebase to handle concurrent changes
+          git pull --rebase origin main
+          git push origin main
+
+      - name: Update go.sum
+        run: |
+          go mod tidy
+          git add go.sum
+          git diff --quiet && git diff --staged --quiet || git commit -m "chore: update go.sum [skip ci]"
+          git pull --rebase origin main
+          git push origin main
+        continue-on-error: true
 
       - name: Get version
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         id: version
         run: |
-          # Check if there are changes to commit
-          if git diff --quiet HEAD~1 -- proto/; then
-            echo "version=$(git describe --tags --always)" >> $GITHUB_OUTPUT
-          else
-            # Generate new version based on timestamp
-            echo "version=v$(date +'%Y.%m.%d')-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-          fi
+          # Generate new version based on timestamp
+          echo "version=v$(date +'%Y.%m.%d')-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Create tag
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           git tag -a ${{ steps.version.outputs.version }} -m "Release ${{ steps.version.outputs.version }}"
           git push origin ${{ steps.version.outputs.version }}
-        continue-on-error: true
-
-  # Optional: Publish to GitHub Packages
-  publish-package:
-    needs: generate
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.21'
-
-      - name: Update go.mod
-        run: |
-          go mod tidy
-
-      - name: Commit go.sum
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add go.sum
-          git diff --quiet && git diff --staged --quiet || git commit -m "chore: update go.sum [skip ci]"
-          git push
         continue-on-error: true
