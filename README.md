@@ -7,7 +7,7 @@ Shared Protocol Buffer definitions for the Game Server project.
 Import as a Go module:
 
 ```go
-import pb "github.com/nstut/game-server-proto/gen"
+import pb "github.com/UpperMoon0/game-server-proto/gen"
 ```
 
 ## Development
@@ -40,5 +40,5 @@ Proto changes are automatically versioned via GitHub Actions. Each change to the
 
 ## Projects Using This
 
-- [Game-Server-Controller-BE](https://github.com/nstut/Game-Server-Controller-BE) - Backend controller
-- [Game-Server-Node](https://github.com/nstut/Game-Server-Node) - Node agent
+- [Game-Server-Controller-BE](https://github.com/UpperMoon0/Game-Server-Controller-BE) - Backend controller
+- [Game-Server-Node](https://github.com/UpperMoon0/Game-Server-Node) - Node agent
