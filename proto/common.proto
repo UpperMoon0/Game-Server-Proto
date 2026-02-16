@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package controller;
 
-option go_package = "github.com/nstut/game-server-proto/gen";
+option go_package = "github.com/UpperMoon0/game-server-proto/gen";
 
 // Common message definitions used across services
 

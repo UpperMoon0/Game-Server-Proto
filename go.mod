@@ -1,4 +1,4 @@
-module github.com/nstut/game-server-proto
+module github.com/UpperMoon0/game-server-proto
 
 go 1.21
 
