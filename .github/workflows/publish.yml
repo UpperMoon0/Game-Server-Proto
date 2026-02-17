@@ -93,13 +93,13 @@ jobs:
           git push origin ${{ steps.version.outputs.version }}
         continue-on-error: true
 
-      - name: Update v0 tag (latest)
+      - name: Update latest tag
         run: |
-          # Delete local v0 tag if exists
-          git tag -d v0 2>/dev/null || true
-          # Delete remote v0 tag if exists
-          git push --delete origin v0 2>/dev/null || true
-          # Create new v0 tag pointing to latest commit
-          git tag -a v0 -m "Latest release (points to ${{ steps.version.outputs.version }})"
-          git push origin v0
+          # Delete local latest tag if exists
+          git tag -d v0.0.0-latest 2>/dev/null || true
+          # Delete remote latest tag if exists
+          git push --delete origin v0.0.0-latest 2>/dev/null || true
+          # Create new latest tag pointing to latest commit
+          git tag -a v0.0.0-latest -m "Latest release (points to ${{ steps.version.outputs.version }})"
+          git push origin v0.0.0-latest
         continue-on-error: true
