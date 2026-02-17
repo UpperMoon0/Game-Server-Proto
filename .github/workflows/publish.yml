@@ -95,6 +95,8 @@ jobs:
 
       - name: Update v0 tag (latest)
         run: |
+          # Delete local v0 tag if exists
+          git tag -d v0 2>/dev/null || true
           # Delete remote v0 tag if exists
           git push --delete origin v0 2>/dev/null || true
           # Create new v0 tag pointing to latest commit
