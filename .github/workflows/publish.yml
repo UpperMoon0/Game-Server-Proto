@@ -87,8 +87,17 @@ jobs:
           # Generate new version based on timestamp
           echo "version=v$(date +'%Y.%m.%d')-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
-      - name: Create tag
+      - name: Create specific version tag
         run: |
           git tag -a ${{ steps.version.outputs.version }} -m "Release ${{ steps.version.outputs.version }}"
           git push origin ${{ steps.version.outputs.version }}
+        continue-on-error: true
+
+      - name: Update v0 tag (latest)
+        run: |
+          # Delete remote v0 tag if exists
+          git push --delete origin v0 2>/dev/null || true
+          # Create new v0 tag pointing to latest commit
+          git tag -a v0 -m "Latest release (points to ${{ steps.version.outputs.version }})"
+          git push origin v0
         continue-on-error: true
